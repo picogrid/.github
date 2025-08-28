@@ -1,29 +1,23 @@
 name: trufflehog-scan
-
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
-
 permissions:
   contents: read
-
 jobs:
   trufflehog:
     name: TruffleHog Secret Scan
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout PR HEAD (no credentials)
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
-
       - name: Run TruffleHog on PR diff
-        uses: trufflesecurity/trufflehog@v3
+        uses: trufflesecurity/trufflehog@v3.90.5
         with:
           base: ${{ github.event.pull_request.base.sha }}
           head: ${{ github.event.pull_request.head.sha }}
           redact: true
           fail: true
-
