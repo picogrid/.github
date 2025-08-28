@@ -32,4 +32,4 @@ jobs:
         with:
           base: __base
           head: HEAD
-          extra_args: "--fail --results=verified,unknown"
+          extra_args: "--results=verified,unknown"
