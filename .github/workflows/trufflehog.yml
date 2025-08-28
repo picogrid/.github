@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the PR's HEAD from the source repo (works for forks), no token persisted
-      - name: Checkout PR HEAD (fork-safe)
+      - name: Checkout PR HEAD (fork-safe; no creds)
         uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -22,12 +21,12 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Ensure the base commit exists locally for the diff
-      - name: Fetch base commit
+      - name: Fetch base commit (with GITHUB_TOKEN)
         run: |
-          git fetch --no-tags --prune --depth=1 origin +${{ github.event.pull_request.base.sha }}:refs/heads/__base
+          git fetch --no-tags --prune --depth=1 \
+            https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} \
+            +${{ github.event.pull_request.base.sha }}:refs/heads/__base
 
-      # Run TruffleHog on the PR diff; pass flags via extra_args (per Marketplace)
       - name: Run TruffleHog on PR diff
         uses: trufflesecurity/trufflehog@v3.90.5
         with:
