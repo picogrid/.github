@@ -1,23 +1,36 @@
 name: trufflehog-scan
+
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
+
 permissions:
   contents: read
+
 jobs:
   trufflehog:
     name: TruffleHog Secret Scan
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout PR HEAD (no credentials)
+      # Check out the PR's HEAD from the source repo (works for forks), no token persisted
+      - name: Checkout PR HEAD (fork-safe)
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+          fetch-depth: 0
+
+      # Ensure the base commit exists locally for the diff
+      - name: Fetch base commit
+        run: |
+          git fetch --no-tags --prune --depth=1 origin +${{ github.event.pull_request.base.sha }}:refs/heads/__base
+
+      # Run TruffleHog on the PR diff; pass flags via extra_args (per Marketplace)
       - name: Run TruffleHog on PR diff
         uses: trufflesecurity/trufflehog@v3.90.5
         with:
-          base: ${{ github.event.pull_request.base.sha }}
-          head: ${{ github.event.pull_request.head.sha }}
-          redact: true
-          fail: true
+          base: __base
+          head: HEAD
+          extra_args: "--fail --redact --results=verified,unknown"
